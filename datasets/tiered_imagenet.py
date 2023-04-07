@@ -31,11 +31,11 @@ class TieredImageNet(DatasetBase):
         else:
             text_file = os.path.join(self.dataset_dir, "classnames.txt")
             classnames = self.read_classnames(text_file)
-            train = self.read_data(classnames, "train")
+            train, self.train_classnames = self.read_data(classnames, "train")
             # Follow standard practice to perform evaluation on the val set
             # In tiered imagenet we have splitted class
-            val = self.read_data(classnames, "val")
-            test = self.read_data(classnames, "test")
+            val, self.val_classnames = self.read_data(classnames, "val")
+            test, self.test_classnames = self.read_data(classnames, "test")
 
             preprocessed = {"train": train, "val": val, "test": test}
             with open(self.preprocessed, "wb") as f:
@@ -131,14 +131,16 @@ class TieredImageNet(DatasetBase):
         split_dir = os.path.join(self.image_dir, split_dir)
         folders = sorted(f.name for f in os.scandir(split_dir) if f.is_dir())
         items = []
+        used_classnames = []
 
         for label, folder in enumerate(folders):
             imnames = listdir_nohidden(os.path.join(split_dir, folder))
             classname = classnames[folder]
             imnames = imnames[:end]
+            used_classnames.append(classname)
             for imname in imnames:
                 impath = os.path.join(split_dir, folder, imname)
                 item = Datum(impath=impath, label=label, classname=classname)
                 items.append(item)
 
-        return items
+        return items, used_classnames
