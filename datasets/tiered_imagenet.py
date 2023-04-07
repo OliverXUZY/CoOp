@@ -59,6 +59,7 @@ class TieredImageNet(DatasetBase):
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
+        # print(len(test))
         # for i in range(1500, 1560):
         #     print(i)
         #     print(test[i])
@@ -66,6 +67,7 @@ class TieredImageNet(DatasetBase):
         #     print(test[i].label)
         #     print(test[i].classname)
         ### sampling part
+        # assert(False)
         # Now there are 124,261 imgs in val and 206,209 in test, too many, sample 50 images per class
         # print("start sampling part dataset")
         # sampled_idx = {}
@@ -122,6 +124,10 @@ class TieredImageNet(DatasetBase):
         return classnames
 
     def read_data(self, classnames, split_dir):
+        if split_dir in ["test","val"]:
+            end = 50
+        else:
+            end = -1
         split_dir = os.path.join(self.image_dir, split_dir)
         folders = sorted(f.name for f in os.scandir(split_dir) if f.is_dir())
         items = []
@@ -129,6 +135,7 @@ class TieredImageNet(DatasetBase):
         for label, folder in enumerate(folders):
             imnames = listdir_nohidden(os.path.join(split_dir, folder))
             classname = classnames[folder]
+            imnames = imnames[:end]
             for imname in imnames:
                 impath = os.path.join(split_dir, folder, imname)
                 item = Datum(impath=impath, label=label, classname=classname)
