@@ -44,3 +44,4 @@ test CLIP zero shot without training
 ```
 bash scripts/cocoop/zy_test.sh tiered_imagenet 1
 ```
+This will get me 0.1%.
