@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cd ../..
+# cd ../..
 
 # custom config
-DATA=/path/to/datasets
+DATA=/srv/home/zxu444/datasets
 TRAINER=CoCoOp
 # TRAINER=CoOp
 
