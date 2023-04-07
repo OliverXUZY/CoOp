@@ -67,30 +67,30 @@ class TieredImageNet(DatasetBase):
         #     print(test[i].classname)
         ### sampling part
         # Now there are 124,261 imgs in val and 206,209 in test, too many, sample 50 images per class
-        print("start sampling part dataset")
-        sampled_idx = {}
+        # print("start sampling part dataset")
+        # sampled_idx = {}
         ##### cache label file since it's time consuming
-        for split_tag, num_class in zip(["val", "test"],[97,160]):
-            cache_label_file = os.path.join(self.dataset_dir,"cached_{}_labels_vl-tiered-imagenet.npy".format(split_tag))
-            if os.path.exists(cache_label_file):
-                self.label = np.load(cache_label_file)
-                print(
-                    f"Loading labels from cached file {cache_label_file}"
-                )
-            else:
-                print(
-                    "cannot find cached label file !!!", cache_label_file
-                )
+        # for split_tag, num_class in zip(["val", "test"],[97,160]):
+        #     cache_label_file = os.path.join(self.dataset_dir,"cached_{}_labels_vl-tiered-imagenet.npy".format(split_tag))
+        #     if os.path.exists(cache_label_file):
+        #         self.label = np.load(cache_label_file)
+        #         print(
+        #             f"Loading labels from cached file {cache_label_file}"
+        #         )
+        #     else:
+        #         print(
+        #             "cannot find cached label file !!!", cache_label_file
+        #         )
 
-            self.catlocs = tuple()
-            for cat in range(num_class):
-                self.catlocs += (np.argwhere(self.label == cat).reshape(-1),)
-            cats = np.arange(num_class)
-            ids = []
-            for c in cats:
-                ids += np.random.choice(self.catlocs[c], 5, replace=False).tolist()
+        #     self.catlocs = tuple()
+        #     for cat in range(num_class):
+        #         self.catlocs += (np.argwhere(self.label == cat).reshape(-1),)
+        #     cats = np.arange(num_class)
+        #     ids = []
+        #     for c in cats:
+        #         ids += np.random.choice(self.catlocs[c], 5, replace=False).tolist()
             
-            sampled_idx[split_tag] = ids
+        #     sampled_idx[split_tag] = ids
         
         # print(sampled_idx['val'][50:70])
         # val = np.array(val, dtype=object)[sampled_idx['val']].tolist()
