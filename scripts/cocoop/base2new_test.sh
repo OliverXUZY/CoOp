@@ -3,7 +3,7 @@
 # cd ../..
 
 # custom config
-DATA=/srv/home/zxu444/datasets
+DATA=/srv/home/zhmeishi/datasets
 TRAINER=CoCoOp
 # TRAINER=CoOp
 
@@ -30,7 +30,6 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir ${MODEL_DIR} \
     --load-epoch ${LOADEP} \
     --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
@@ -38,3 +37,4 @@ else
 fi
 
 # 
+#    --model-dir ${MODEL_DIR} \
