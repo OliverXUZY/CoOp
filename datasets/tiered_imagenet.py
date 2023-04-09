@@ -44,7 +44,8 @@ class TieredImageNet(DatasetBase):
                 pickle.dump(preprocessed, f, protocol=pickle.HIGHEST_PROTOCOL)
             print("save preprocessed")
 
-        ### label to classnames mapping
+        ### label to classnames mapping, not used right now
+        '''
         if os.path.exists(self.label_to_classnames):
             with open(self.label_to_classnames, "rb") as f:
                 self.label_to_classnames_dict = pickle.load(f)
@@ -66,6 +67,7 @@ class TieredImageNet(DatasetBase):
             with open(self.label_to_classnames, "wb") as f:
                 pickle.dump(label_to_classnames, f, protocol=pickle.HIGHEST_PROTOCOL)
             print("save label_to_classnames")
+        '''
                 
 
         num_shots = cfg.DATASET.NUM_SHOTS
@@ -85,13 +87,7 @@ class TieredImageNet(DatasetBase):
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        # assert(False)
-        # for i in range(1500, 1560):
-        #     print(i)
-        #     print(test[i])
-        #     print(test[i].impath)
-        #     print(test[i].label)
-        #     print(test[i].classname)
+        
         ### sampling part
         # Now there are 124,261 imgs in val and 206,209 in test, too many, sample 50 images per class
         print("start sampling part dataset")
@@ -122,16 +118,7 @@ class TieredImageNet(DatasetBase):
         # print(sampled_idx['val'][50:70])
         val = np.array(val, dtype=object)[sampled_idx['val']].tolist()
         test = np.array(test, dtype=object)[sampled_idx['test']].tolist()
-        # val =  np.array(val, dtype=object)[:50].tolist()
-        # test = np.array(test, dtype=object)[:50].tolist()
-        # print(val[50:70])
-        # for i in range(50,70):
-        #     print(i)
-        #     print(val[i])
-        #     print(val[i].label)
-        #     print(val[i].classname)
-        # print("zhuoyan ===")
-        # print(DatasetBase.get_num_classes(val))
+        
         subsample = cfg.DATASET.SUBSAMPLE_CLASSES
         if subsample == "base":
             super().__init__(train_x=train, val=train, test=train) # only use train and val split in base train
