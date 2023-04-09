@@ -4,23 +4,23 @@
 
 # custom config
 DATA=/srv/home/zxu444/datasets
-TRAINER=CoCoOp
+TRAINER=MTCoCoOp
 # TRAINER=CoOp
 
 DATASET=$1
 SEED=$2
 
-CFG=vit_b32_c4_ep10_batch1_ctxv1
+CFG=vit_b32_c4_ep100_batch5_RanClsSmlr_ctxv1
+# CFG=vit_b16_ctxv1  # uncomment this when TRAINER=CoOp
 SHOTS=16
 # LOADEP=10
-LOADEP=$3
+LOADEP=20
 SUB=new
 
-### set up which model to test
-# COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
+############### set up which model to test
+COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
 
-COMMON_DIR=${DATASET}/shots_${SHOTS}/MTCoCoOp/vit_b32_c4_ep100_batch5_RanClsSmlr_ctxv1/seed${SEED}
-###
+###############
 
 MODEL_DIR=output/base2new/train_base/${COMMON_DIR}
 
@@ -36,11 +36,10 @@ DIR=output/base2new/test_${SUB}/${COMMON_DIR}
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
     --load-epoch ${LOADEP} \
-    --model-dir ${MODEL_DIR} \
     --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
     DATASET.SUBSAMPLE_CLASSES ${SUB}
-# fi
+# fi --model-dir ${MODEL_DIR} \
 
 
 # COMMON_DIR=${DATASET}/original

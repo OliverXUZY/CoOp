@@ -4,22 +4,17 @@
 
 # custom config
 DATA=/srv/home/zxu444/datasets
-TRAINER=CoCoOp
-# TRAINER=CoOp
+TRAINER=MTCoCoOp
 
 DATASET=$1
 SEED=$2
 
-CFG=vit_b16_c4_ep10_batch1_ctxv1
-# CFG=vit_b16_ctxv1  # uncomment this when TRAINER=CoOp
+# CFG=vit_b32_c4_ep10_batch5_RanClsSmlr_ctxv1
+CFG=vit_b32_c4_ep100_batch5_RanClsSmlr_ctxv1
 SHOTS=16
-LOADEP=10
-SUB=new
 
 
-COMMON_DIR=${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}
-MODEL_DIR=output/base2new/train_base/${COMMON_DIR}
-DIR=output/base2new/test_${SUB}/${COMMON_DIR}
+DIR=output/base2new/train_base/${DATASET}/shots_${SHOTS}/${TRAINER}/${CFG}/seed${SEED}/
 if [ -d "$DIR" ]; then
     echo "Oops! The results exist at ${DIR} (so skip this job)"
 else
@@ -30,11 +25,7 @@ else
     --dataset-config-file configs/datasets/${DATASET}.yaml \
     --config-file configs/trainers/${TRAINER}/${CFG}.yaml \
     --output-dir ${DIR} \
-    --model-dir ${MODEL_DIR} \
-    --load-epoch ${LOADEP} \
-    --eval-only \
     DATASET.NUM_SHOTS ${SHOTS} \
-    DATASET.SUBSAMPLE_CLASSES ${SUB}
+    DATASET.SUBSAMPLE_CLASSES base
 fi
-
-# 
+# bash scripts/cocoop/mt_train.sh tiered_imagenet 1
