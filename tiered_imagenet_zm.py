@@ -1,7 +1,7 @@
 import os
 import pickle
 from collections import OrderedDict
-from collections import defaultdict
+
 from dassl.data.datasets import DATASET_REGISTRY, Datum, DatasetBase
 from dassl.utils import listdir_nohidden, mkdir_if_missing
 
@@ -18,7 +18,6 @@ class TieredImageNet(DatasetBase):
         self.dataset_dir = os.path.join(root, self.dataset_dir)
         self.image_dir = os.path.join(self.dataset_dir)
         self.preprocessed = os.path.join(self.dataset_dir, "preprocessed.pkl")
-        self.label_to_classnames = os.path.join(self.dataset_dir, "label_to_classnames.pkl") # add label to classname mapping
         self.split_fewshot_dir = os.path.join(self.dataset_dir, "split_fewshot")
         mkdir_if_missing(self.split_fewshot_dir)
 
@@ -32,41 +31,16 @@ class TieredImageNet(DatasetBase):
         else:
             text_file = os.path.join(self.dataset_dir, "classnames.txt")
             classnames = self.read_classnames(text_file)
-            train = self.read_data(classnames, "train")
+            train, self.train_classnames = self.read_data(classnames, "train")
             # Follow standard practice to perform evaluation on the val set
             # In tiered imagenet we have splitted class
-            val = self.read_data(classnames, "val")
-            test = self.read_data(classnames, "test")
-            print("zhuoyan=== tiered_imagenet dataset: ", len(classnames)) # [1000]
+            val, self.val_classnames = self.read_data(classnames, "val")
+            test, self.test_classnames = self.read_data(classnames, "test")
 
             preprocessed = {"train": train, "val": val, "test": test}
             with open(self.preprocessed, "wb") as f:
                 pickle.dump(preprocessed, f, protocol=pickle.HIGHEST_PROTOCOL)
             print("save preprocessed")
-
-        ### label to classnames mapping
-        if os.path.exists(self.label_to_classnames):
-            with open(self.label_to_classnames, "rb") as f:
-                self.label_to_classnames_dict = pickle.load(f)
-                print("load from label_to_classnames")
-        else:
-            text_file = os.path.join(self.dataset_dir, "classnames.txt")
-            classnames = self.read_classnames(text_file)
-
-            label_to_classnames = {}
-            for split in ['train', 'val', 'test']:
-                label_to_classnames[split] = defaultdict(list) ####=============== not done
-                split_dir = os.path.join(self.image_dir, split)
-                folders = sorted(f.name for f in os.scandir(split_dir) if f.is_dir())
-                for label, folder in enumerate(folders):
-                    classname = classnames[folder]
-                    label_to_classnames[split][label] = classname
-            print(label_to_classnames) ## zhuoyan added, will delete later
-            self.label_to_classnames_dict = label_to_classnames
-            with open(self.label_to_classnames, "wb") as f:
-                pickle.dump(label_to_classnames, f, protocol=pickle.HIGHEST_PROTOCOL)
-            print("save label_to_classnames")
-                
 
         num_shots = cfg.DATASET.NUM_SHOTS
         if num_shots >= 1:
@@ -85,7 +59,7 @@ class TieredImageNet(DatasetBase):
                 with open(preprocessed, "wb") as file:
                     pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
-        # assert(False)
+        # print(len(test))
         # for i in range(1500, 1560):
         #     print(i)
         #     print(test[i])
@@ -93,37 +67,36 @@ class TieredImageNet(DatasetBase):
         #     print(test[i].label)
         #     print(test[i].classname)
         ### sampling part
+        # assert(False)
         # Now there are 124,261 imgs in val and 206,209 in test, too many, sample 50 images per class
-        print("start sampling part dataset")
-        sampled_idx = {}
+        # print("start sampling part dataset")
+        # sampled_idx = {}
         ##### cache label file since it's time consuming
-        for split_tag, num_class in zip(["val", "test"],[97,160]):
-            cache_label_file = os.path.join(self.dataset_dir,"cached_{}_labels_vl-tiered-imagenet.npy".format(split_tag))
-            if os.path.exists(cache_label_file):
-                self.label = np.load(cache_label_file)
-                print(
-                    f"Loading labels from cached file {cache_label_file}"
-                )
-            else:
-                print(
-                    "cannot find cached label file !!!", cache_label_file
-                )
+        # for split_tag, num_class in zip(["val", "test"],[97,160]):
+        #     cache_label_file = os.path.join(self.dataset_dir,"cached_{}_labels_vl-tiered-imagenet.npy".format(split_tag))
+        #     if os.path.exists(cache_label_file):
+        #         self.label = np.load(cache_label_file)
+        #         print(
+        #             f"Loading labels from cached file {cache_label_file}"
+        #         )
+        #     else:
+        #         print(
+        #             "cannot find cached label file !!!", cache_label_file
+        #         )
 
-            self.catlocs = tuple()
-            for cat in range(num_class):
-                self.catlocs += (np.argwhere(self.label == cat).reshape(-1),)
-            cats = np.arange(num_class)
-            ids = []
-            for c in cats:
-                ids += np.random.choice(self.catlocs[c], 50, replace=False).tolist()
+        #     self.catlocs = tuple()
+        #     for cat in range(num_class):
+        #         self.catlocs += (np.argwhere(self.label == cat).reshape(-1),)
+        #     cats = np.arange(num_class)
+        #     ids = []
+        #     for c in cats:
+        #         ids += np.random.choice(self.catlocs[c], 5, replace=False).tolist()
             
-            sampled_idx[split_tag] = ids
+        #     sampled_idx[split_tag] = ids
         
         # print(sampled_idx['val'][50:70])
-        val = np.array(val, dtype=object)[sampled_idx['val']].tolist()
-        test = np.array(test, dtype=object)[sampled_idx['test']].tolist()
-        # val =  np.array(val, dtype=object)[:50].tolist()
-        # test = np.array(test, dtype=object)[:50].tolist()
+        # val = np.array(val, dtype=object)[sampled_idx['val']].tolist()
+        # test = np.array(test, dtype=object)[sampled_idx['test']].tolist()
         # print(val[50:70])
         # for i in range(50,70):
         #     print(i)
@@ -132,13 +105,8 @@ class TieredImageNet(DatasetBase):
         #     print(val[i].classname)
         # print("zhuoyan ===")
         # print(DatasetBase.get_num_classes(val))
-        subsample = cfg.DATASET.SUBSAMPLE_CLASSES
-        if subsample == "base":
-            super().__init__(train_x=train, val=train, test=train) # only use train and val split in base train
-        elif subsample == "new":
-            super().__init__(train_x=test, val=test, test=test) # only use test split
-        else:
-            raise NotImplementedError("Not found class characteristics!")
+
+        super().__init__(train_x=train, val=val, test=test)
 
     @staticmethod
     def read_classnames(text_file):
@@ -156,17 +124,23 @@ class TieredImageNet(DatasetBase):
         return classnames
 
     def read_data(self, classnames, split_dir):
+        if split_dir in ["test","val"]:
+            end = 50
+        else:
+            end = -1
         split_dir = os.path.join(self.image_dir, split_dir)
         folders = sorted(f.name for f in os.scandir(split_dir) if f.is_dir())
         items = []
+        used_classnames = []
 
         for label, folder in enumerate(folders):
             imnames = listdir_nohidden(os.path.join(split_dir, folder))
             classname = classnames[folder]
+            imnames = imnames[:end]
+            used_classnames.append(classname)
             for imname in imnames:
                 impath = os.path.join(split_dir, folder, imname)
                 item = Datum(impath=impath, label=label, classname=classname)
                 items.append(item)
 
-        return items
-    
+        return items, used_classnames
