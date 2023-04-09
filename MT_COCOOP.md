@@ -1,4 +1,15 @@
-# Datasets
+# Multitask finetuning using CoCoOp
+
+## Result
+In finetuning stage, sample 5 classes per batch, 1 image per class, perform CoCoOp tuning the simple neural net generating image specific token.
+Context: `'a photo of a {}',`
+
+#### 160-way accuracy (%) on *tiered-ImageNet*
+| pre-train  | zero-shot NC     | Multi-task finetune + NC |
+|------------|------------------|--------------------------|
+|CLIP-ViT_B32| 69.9   |  71.4           | 
+
+## Datasets
 ```
 $DATA = /srv/home/zxu444/datasets/
 $DATA/
@@ -39,7 +50,7 @@ Inside `tiered_imagenet.py`, `self.catlocs` for val data will look like (around 
 ```
 
 
-# Code
+## Code
 test CLIP zero shot without training
 ```
 bash scripts/cocoop/zy_test.sh tiered_imagenet 1
