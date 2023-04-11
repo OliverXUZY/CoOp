@@ -5,7 +5,7 @@ In finetuning stage, sample 5 classes per batch, 1 image per class, perform CoCo
 Context: `'a photo of a {}',`
 
 #### 160-way accuracy (%) on *tiered-ImageNet*
-5 query image per class in testing stage.
+5 query image per class in multitask finetuning stage.
 | pre-train  | zero-shot NC     | Multi-task finetune + NC | standard FT in CoCoOp
 |------------|------------------|--------------------------|--|
 |CLIP-ViT_B32| 69.9   |  71.4           | 72.5|
