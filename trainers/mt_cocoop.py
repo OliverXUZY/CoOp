@@ -194,13 +194,15 @@ class CustomCLIP(nn.Module):
         self.logit_scale = clip_model.logit_scale
         self.dtype = clip_model.dtype
 
-    def forward(self, image, label=None):
+    def forward(self, image, label=None, exd_label = None):
         '''
         tensor([100, 194, 46, 277, 286], device='cuda:0') only encode these classes
         prompts: # [n_cls, n_tkn, d_model] [160, 77, 512]; tokenized_prompts: # (n_cls, n_tkn) (160, 77)
         consider n_cls_selected = 5, select 5 classes in one time
         '''
         # tokenized_prompts = self.tokenized_prompts
+        print("label: ", label)
+        print("exd_label: ", exd_label)
         if label is not None:
             label = label.cpu()
         tokenized_prompts = self.tokenized_prompts[label] # simple hack, shape (n_cls_selected, n_tkn) (5, 77)
@@ -222,11 +224,11 @@ class CustomCLIP(nn.Module):
             l_i = logit_scale * imf_i @ text_features.t() # text_feature.T: [512, n_cls], imf_i: [512,]
             logits.append(l_i)
         logits = torch.stack(logits) ###
-        # print("logits.shape: ", logits.shape)
-        # print("label: ", label)
+        print("logits.shape: ", logits.shape)
         if self.prompt_learner.training:
             # return F.cross_entropy(logits, label)
-            return F.cross_entropy(logits, torch.arange(label.shape[0]).cuda()) # simple hack, only classify among 5 classes
+            return F.cross_entropy(logits, exd_label.cuda())
+            # return F.cross_entropy(logits, torch.arange(label.shape[0]).cuda()) # do not simple hack, only classify among 5 classes
         
         return logits
 
@@ -285,8 +287,9 @@ class MTCoCoOp(TrainerX):
 
     def forward_backward(self, batch):
         image, label = self.parse_batch_train(batch)
-        # print(label)  # tensor([100, 194,  46, 277, 286], device='cuda:0')
-        # model will need to recognize 5 labels, and only classify among this classes!
+        print("zhuoyan == forward_backward label: ", label)  # tensor([100, 194,  46, 277, 286], device='cuda:0')
+        # model will need to recognize 15 labels, and only classify among this classes!
+        exd_label =  torch.arange(label.shape[0])
 
         model = self.model
         optim = self.optim
@@ -301,8 +304,10 @@ class MTCoCoOp(TrainerX):
             scaler.step(optim)
             scaler.update()
         else:
-            loss = model(image, label)
+            loss = model(image, label, exd_label) # exd_label is the true label used for CrossEntropy
             optim.zero_grad()
+            if loss.shape: # loss is a vector in distributed training
+                loss = loss.mean()
             loss.backward()
             optim.step()
 
@@ -316,6 +321,9 @@ class MTCoCoOp(TrainerX):
     def parse_batch_train(self, batch):
         input = batch["img"]
         label = batch["label"]
+        # print("zhuoyan == parse_batch_train: ", label)
+        # label =  torch.arange(label.shape[0])
+        # print("zhuoyan == parse_batch_train: ", label)
         input = input.to(self.device)
         label = label.to(self.device)
         return input, label
